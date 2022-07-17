@@ -8,12 +8,30 @@ export function scheduleTimeoutLatch(
     return latch;
 }
 
-function schedule() {
-    setInterval(
+let schedulerTimer: any;
+function startScheduler() {
+    return setInterval(
         () => {
-            for (const latch of latches) {
+            if (!latches.length) {
+                if (schedulerTimer) {
+                    clearInterval(schedulerTimer);
+                    schedulerTimer = undefined;
+                }
+            }
+            for (let index = 0; index < latches.length; index++) {
+                const latch = latches[index];
                 if (!latch.isDone) {
                     latch.reduceTimeLeft(1);
+                } else {
+                    latches.splice(index, 1);
+                    latch.registerOnResetCallback(() => {
+                        latch.clearResetCallback();
+                        latches.push(latch);
+
+                        if (!schedulerTimer) {
+                            schedulerTimer = startScheduler();
+                        }
+                    });
                 }
             }
         },
@@ -21,4 +39,4 @@ function schedule() {
     )
 }
 
-schedule();
+schedulerTimer = startScheduler();

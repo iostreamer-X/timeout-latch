@@ -1,20 +1,26 @@
-export type TimeoutLatchConstructor = [timeoutMS: number, onDoneCallback?: Function];
+export type TimeoutLatchConstructor = [timeoutMS: number, onTimeExhaustedCallback?: Function];
 export class TimeoutLatch {
     private timeLeftMS: number;
     private isCancelled: boolean = false;
     private _isTimeExhausted: boolean = false;
     readonly timeoutMS: number;
-    readonly onDoneCallback?: Function
+    private onTimeExhaustedCallback?: Function;
+    private onResetCallback?: Function;
 
     constructor(...params: TimeoutLatchConstructor) {
         this.timeoutMS = params[0];
         this.timeLeftMS = this.timeoutMS;
-        this.onDoneCallback = params[1];
+        this.onTimeExhaustedCallback = params[1];
     }
 
     reset() {
         this.timeLeftMS = this.timeoutMS;
         this.isCancelled = false;
+        this.isTimeExhausted = false;
+
+        if (this.onResetCallback) {
+            this.onResetCallback();
+        }
     }
 
     reduceTimeLeft(
@@ -25,7 +31,7 @@ export class TimeoutLatch {
             return;
         }
         if (this.isTimeExhausted) {
-            // console.warn('timeLeft already exhausted!');
+            console.warn('timeLeft already exhausted!');
             return;
         }
         this.timeLeftMS -= timeMS;
@@ -49,7 +55,9 @@ export class TimeoutLatch {
 
     set isTimeExhausted(flag: boolean) {
         this._isTimeExhausted = flag;
-        this.onTimeExhausted();
+        if (flag) {
+            this.onTimeExhausted();
+        }
     }
 
     get isTimeExhausted() {
@@ -57,8 +65,23 @@ export class TimeoutLatch {
     }
 
     onTimeExhausted() {
-        if (this.onDoneCallback) {
-            this.onDoneCallback();
+        if (this.onTimeExhaustedCallback) {
+            this.onTimeExhaustedCallback();
         }
+    }
+
+    registerOnTimeExhaustedCallback(callback: Function) {
+        this.onTimeExhaustedCallback = callback;
+    }
+    clearTimeExhaustedCallback() {
+        this.onTimeExhaustedCallback = undefined;
+    }
+
+    registerOnResetCallback(callback: Function) {
+        this.onResetCallback = callback;
+    }
+
+    clearResetCallback() {
+        this.onResetCallback = undefined;
     }
 }
