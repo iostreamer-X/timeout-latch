@@ -1,6 +1,6 @@
 {
   "name": "timeout-latch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple timeout latch. Like a reverse leaky bucket. ",
   "main": "dist/index.js",
   "scripts": {
