@@ -17,14 +17,15 @@ class Scheduler {
                 continue;
             }
             this.latches.splice(index, 1);
-            latch.registerOnResetCallback(() => {
-                latch.clearResetCallback();
+            const schedulerResetHandler = () => {
+                latch.clearResetCallback(schedulerResetHandler);
                 this.latches.push(latch);
 
                 if (!this.isRunning) {
                     this.start();
                 }
-            });
+            }
+            latch.registerOnResetCallback(schedulerResetHandler);
         }
     }
 
@@ -34,7 +35,7 @@ class Scheduler {
             return;
         }
         this.isRunning = false;
-        clearTimeout(this.timer);
+        clearInterval(this.timer);
     }
 
     start() {

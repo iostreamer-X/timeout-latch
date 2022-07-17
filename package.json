@@ -2,7 +2,7 @@
   "name": "timeout-latch",
   "version": "1.0.0",
   "description": "A simple timeout latch. Like a reverse leaky bucket. ",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,5 +18,6 @@
   "homepage": "https://github.com/iostreamer-X/timeout-latch#readme",
   "devDependencies": {
     "typescript": "^4.7.4"
-  }
+  },
+  "types": "dist/index.d.ts"
 }

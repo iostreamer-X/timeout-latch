@@ -4,13 +4,15 @@ export class TimeoutLatch {
     private isCancelled: boolean = false;
     private _isTimeExhausted: boolean = false;
     readonly timeoutMS: number;
-    private onTimeExhaustedCallback?: Function;
-    private onResetCallback?: Function;
+    private onTimeExhaustedCallbacks: Function[] = [];
+    private onResetCallbacks: Function[] = [];
 
     constructor(...params: TimeoutLatchConstructor) {
         this.timeoutMS = params[0];
         this.timeLeftMS = this.timeoutMS;
-        this.onTimeExhaustedCallback = params[1];
+        if (params[1]) {
+            this.onTimeExhaustedCallbacks.push(params[1]);
+        }
     }
 
     reset() {
@@ -18,9 +20,7 @@ export class TimeoutLatch {
         this.isCancelled = false;
         this.isTimeExhausted = false;
 
-        if (this.onResetCallback) {
-            this.onResetCallback();
-        }
+        this.runAllResetCallbacks();
     }
 
     reduceTimeLeft(
@@ -65,23 +65,39 @@ export class TimeoutLatch {
     }
 
     onTimeExhausted() {
-        if (this.onTimeExhaustedCallback) {
-            this.onTimeExhaustedCallback();
-        }
+        this.runAllTimeExhaustedCallbacks();
     }
 
     registerOnTimeExhaustedCallback(callback: Function) {
-        this.onTimeExhaustedCallback = callback;
+        this.onTimeExhaustedCallbacks.push(callback);
     }
-    clearTimeExhaustedCallback() {
-        this.onTimeExhaustedCallback = undefined;
+    clearTimeExhaustedCallback(functionReference: Function) {
+        this.onTimeExhaustedCallbacks.splice(
+            this.onTimeExhaustedCallbacks.indexOf(functionReference), 
+        1);
+    }
+    runAllTimeExhaustedCallbacks() {
+        for (const callback of this.onTimeExhaustedCallbacks) {
+            callback();
+        }
     }
 
     registerOnResetCallback(callback: Function) {
-        this.onResetCallback = callback;
+        this.onResetCallbacks.push(callback);
     }
 
-    clearResetCallback() {
-        this.onResetCallback = undefined;
+    clearResetCallback(functionReference: Function) {
+        this.onResetCallbacks.splice(
+            this.onResetCallbacks.indexOf(functionReference), 
+        1);
+    }
+
+    runAllResetCallbacks() {
+        for (const callback of this.onResetCallbacks) {
+            setTimeout(
+                callback,
+                0
+            )
+        }
     }
 }
