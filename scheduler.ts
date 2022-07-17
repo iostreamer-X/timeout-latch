@@ -2,7 +2,7 @@ import { TimeoutLatch, TimeoutLatchConstructor } from "./timeout-latch";
 
 class Scheduler {
     private latches: TimeoutLatch[] = [];
-    private timer: number;
+    private timer: number | undefined;
     private isRunning = false;
 
     tick() {
