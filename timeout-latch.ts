@@ -53,18 +53,18 @@ export class TimeoutLatch {
         return this.isCancelled || this.isTimeExhausted;
     }
 
-    set isTimeExhausted(flag: boolean) {
+    private set isTimeExhausted(flag: boolean) {
         this._isTimeExhausted = flag;
         if (flag) {
             this.onTimeExhausted();
         }
     }
 
-    get isTimeExhausted() {
+    private get isTimeExhausted() {
         return this._isTimeExhausted;
     }
 
-    onTimeExhausted() {
+    private onTimeExhausted() {
         this.runAllTimeExhaustedCallbacks();
     }
 
@@ -76,7 +76,7 @@ export class TimeoutLatch {
             this.onTimeExhaustedCallbacks.indexOf(functionReference), 
         1);
     }
-    runAllTimeExhaustedCallbacks() {
+    private runAllTimeExhaustedCallbacks() {
         for (const callback of this.onTimeExhaustedCallbacks) {
             callback();
         }
@@ -92,7 +92,7 @@ export class TimeoutLatch {
         1);
     }
 
-    runAllResetCallbacks() {
+    private runAllResetCallbacks() {
         for (const callback of this.onResetCallbacks) {
             setTimeout(
                 callback,
