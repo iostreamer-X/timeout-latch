@@ -1,42 +1,59 @@
 import { TimeoutLatch, TimeoutLatchConstructor } from "./timeout-latch";
-const latches: TimeoutLatch[] = [];
-export function scheduleTimeoutLatch(
-    ...params: TimeoutLatchConstructor
-) {
-    const latch = new TimeoutLatch(...params);
-    latches.push(latch);
-    return latch;
+
+class Scheduler {
+    private latches: TimeoutLatch[] = [];
+    private timer: number;
+    private isRunning = false;
+
+    tick() {
+        if (!this.latches.length) {
+            this.stop();
+        }
+
+        for (let index = 0; index < this.latches.length; index++) {
+            const latch = this.latches[index];
+            if (!latch.isDone) {
+                latch.reduceTimeLeft(1);
+                continue;
+            }
+            this.latches.splice(index, 1);
+            latch.registerOnResetCallback(() => {
+                latch.clearResetCallback();
+                this.latches.push(latch);
+
+                if (!this.isRunning) {
+                    this.start();
+                }
+            });
+        }
+    }
+
+
+    stop() {
+        if (!this.isRunning) {
+            return;
+        }
+        this.isRunning = false;
+        clearTimeout(this.timer);
+    }
+
+    start() {
+        if (this.isRunning) {
+            return;
+        }
+        this.timer = setInterval(this.tick.bind(this), 1);
+        this.isRunning = true;
+    }
+
+    scheduleTimeoutLatch(
+        ...params: TimeoutLatchConstructor
+    ) {
+        const latch = new TimeoutLatch(...params);
+        this.latches.push(latch);
+        return latch;
+    }
 }
 
-let schedulerTimer: any;
-function startScheduler() {
-    return setInterval(
-        () => {
-            if (!latches.length) {
-                if (schedulerTimer) {
-                    clearInterval(schedulerTimer);
-                    schedulerTimer = undefined;
-                }
-            }
-            for (let index = 0; index < latches.length; index++) {
-                const latch = latches[index];
-                if (!latch.isDone) {
-                    latch.reduceTimeLeft(1);
-                } else {
-                    latches.splice(index, 1);
-                    latch.registerOnResetCallback(() => {
-                        latch.clearResetCallback();
-                        latches.push(latch);
-
-                        if (!schedulerTimer) {
-                            schedulerTimer = startScheduler();
-                        }
-                    });
-                }
-            }
-        },
-        1,
-    )
-}
-
-schedulerTimer = startScheduler();
+const scheduler = new Scheduler();
+scheduler.start();
+export const scheduleTimeoutLatch = scheduler.scheduleTimeoutLatch.bind(scheduler);
