@@ -24,9 +24,15 @@ function reset() { // when you want to reset the timer
 But we realise that resetting only works when the timeout has completed its work. If we reset before that
 then we simply have two timeouts!
 
-## How does it work?
+To counter this we can clear the previous timer and start again. And it works but has the overhead of cancelling and creating new timers. Also, it's a timer per latch.
+
+## Architecture?
 We run a custom scheduler of our own. This scheduler essentially simulates time, and manages timeouts on its own.
-The scheduler ticks every 1ms, on each tick it checks if there's a possibility of timeout. 
+The scheduler ticks every 1ms, on each tick it checks if there's a possibility of timeout.
+
+It also has the ability pause the scheduler if no active latches are present. As soon as a new latch is scheduled or an old latch is reset, it starts again.
+
+![](https://i.imgur.com/LPtMdJn.png)
 
 ## Example
 ```js
@@ -64,4 +70,6 @@ setTimeout(
 - `registerOnResetCallback(callback: Function)`
     - Adds callbacks which will be called when it resets
     - Will only be called if latch's `reset` function is called
+- `clearResetCallback(functionReference: Function)`
+    - Clears the associated callback
     
